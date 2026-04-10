@@ -50,6 +50,34 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Compte créé avec succès !');
     }
 
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'current_password' => 'required',
+            'username' => 'required|string|max:255',
+            'password' => 'nullable|confirmed|min:4',
+        ]);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['current_password' => ['Le mot de passe actuel est incorrect.']],
+            ], 422);
+        }
+
+        $user->username = $request->username;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json(['success' => true, 'message' => 'Profil mis à jour avec succès !']);
+    }
+
     public function logout(Request $request)
     {
         Auth::logout();

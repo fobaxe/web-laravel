@@ -1,10 +1,10 @@
 // Recupere tous les elements de la modale utilises dans le script.
-const overlay   = document.getElementById('modal-overlay');
-const btnOpen   = document.getElementById('btn-open-modal');
-const btnClose  = document.getElementById('btn-close-modal');
+const overlay = document.getElementById('modal-overlay');
+const btnOpen = document.getElementById('btn-open-modal');
+const btnClose = document.getElementById('btn-close-modal');
 const btnCancel = document.getElementById('btn-cancel-modal');
-const form      = document.getElementById('modal-ticket-form');
-const toast     = document.getElementById('modal-toast');
+const form = document.getElementById('modal-ticket-form');
+const toast = document.getElementById('modal-toast');
 
 // Ouvre la modale et place le curseur dans le premier champ utile.
 function openModal() {
@@ -48,9 +48,9 @@ function validateField(inputId, errorId) {
 // Valide les champs obligatoires de la modale.
 function validateForm() {
     const ok1 = validateField('m-subject', 'm-subject-error');
-    const ok2 = validateField('m-client',  'm-client-error');
-    const ok3 = validateField('m-due',     'm-due-error');
-    const ok4 = validateField('m-projet',  'm-projet-error');
+    const ok2 = validateField('m-client', 'm-client-error');
+    const ok3 = validateField('m-due', 'm-due-error');
+    const ok4 = validateField('m-projet', 'm-projet-error');
     return ok1 && ok2 && ok3 && ok4;
 }
 
@@ -62,7 +62,6 @@ function resetForm() {
 }
 
 // Soumet le formulaire en fetch vers la route api Laravel.
-// On utilise une route web (et non api.php) pour conserver la session Auth::id().
 form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -74,13 +73,13 @@ form.addEventListener('submit', async function (e) {
 
     // Construit la charge utile envoyee au serveur.
     const payload = {
-        subject:     document.getElementById('m-subject').value.trim(),
-        client:      document.getElementById('m-client').value.trim(),
+        subject: document.getElementById('m-subject').value.trim(),
+        client: document.getElementById('m-client').value.trim(),
         description: document.getElementById('m-description').value.trim(),
-        due:         document.getElementById('m-due').value,
-        priority:    document.getElementById('m-priority').value,
-        status:      document.getElementById('m-status').value,
-        projet_id:   document.getElementById('m-projet').value,
+        due: document.getElementById('m-due').value,
+        priority: document.getElementById('m-priority').value,
+        status: document.getElementById('m-status').value,
+        projet_id: document.getElementById('m-projet').value,
     };
 
     try {
@@ -89,7 +88,7 @@ form.addEventListener('submit', async function (e) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept':       'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
             },
             credentials: 'same-origin',

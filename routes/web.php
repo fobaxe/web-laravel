@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
 
     // Settings
     Route::get('/settings', function() { return view('settings'); })->name('settings');
+    Route::put('/settings', [AuthController::class, 'updateProfile'])->name('settings.update');
 
     // Projets
     Route::get('/projets', [ProjetController::class, 'index'])->name('projets.index');
