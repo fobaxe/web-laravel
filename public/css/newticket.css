@@ -1,0 +1,110 @@
+:root{
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --accent:#3b82f6;
+    --muted:#6b7280;
+    --success:#10b981;
+    --danger:#ef4444;
+    --radius:12px;
+}
+body{
+    font-family:Arial,system-ui;
+}
+
+.titanic {
+    display: none;
+}
+
+
+.container{
+    max-width:920px;
+    margin:32px auto;
+    padding:16px;
+}
+
+.back{
+    display:inline-block;
+    margin-bottom:16px;
+    color:var(--accent);
+    text-decoration:none;
+}
+.card{
+    background:var(--card);
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 6px 20px rgba(17,24,39,0.06);
+}
+
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr 320px;
+    gap:18px;
+}
+.field-group{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+.field-group label{
+    font-weight:600;
+    font-size:14px;
+    color:var(--muted);
+}
+.field-group input[type="text"],.field-group select,.field-group textarea,input[type="date"]{
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+    background:#fff;
+}
+.field-group textarea{min-height:100px}
+.right-column{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.form-actions{
+    margin-top:18px;
+    display:flex;
+    gap:10px;
+}
+.btn-sm{
+    padding:10px 14px;
+    border-radius:10px;
+    border:0;
+    background:linear-gradient(90deg,#60a5fa,#3b82f6);
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration: none;
+}
+.btn-cancel{
+    background:transparent;
+    border:1px solid #e5e7eb;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    text-decoration: none;
+    color:#111;
+}
+.message-erreur{
+    font-size: 0.82rem;
+    color: #b23b2c;
+    background: #ffe7df;
+    border: 1px solid #f2c2b8;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+.toast {
+    margin-left: auto;
+    width: 100px;
+    align-items: center;
+    background: #1f6f54;
+    color: #fff8f2;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+@media (max-width:640px){
+    .form-grid{grid-template-columns:1fr}
+}

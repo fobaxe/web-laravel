@@ -1,0 +1,121 @@
+:root{
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --muted: #6b7280;
+    --text: #0f172a;
+    --primary: #2563eb;
+    --radius: 10px;
+}
+
+*{box-sizing:border-box}
+
+.titanic{
+    display:none;
+}
+body{height:100%}
+body{
+    font-family:Arial,system-ui;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+}
+
+.logo{
+    height:120px;
+    display:block;
+}
+
+.container{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:80vh;
+    padding:24px;
+}
+
+.card{
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-radius:calc(var(--radius) + 2px);
+    box-shadow:0 10px 30px rgba(2,6,23,0.08);
+    padding:28px;
+}
+
+.card h1{
+    margin:0 0 16px 0;
+    font-size:25px;
+}
+
+.login-form .form-group{margin-bottom:14px}
+.login-form label{
+    display:block;
+    margin-bottom:6px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.input{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid #e6eaf0;
+    background:#fff;
+    font-size:14px;
+    color:var(--text);
+}
+
+.form-help{
+    margin-top:6px;
+    text-align:center;
+}
+.forgot-link{
+    color:var(--primary);
+    font-size:13px;
+    margin-left: 120px;
+    text-decoration:none;
+    font-weight:600;
+}
+.forgot-link:hover{text-decoration:underline}
+
+.form-actions{margin-top:18px}
+
+.btn{
+    width:100%;
+    display:block;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#FC5200;
+    color:#fff;
+    border:0;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration: none;
+    text-align: center;
+}
+.btn:hover{filter:brightness(0.98)}
+.btn:active{transform:translateY(1px)}
+
+.btn-compte{
+    display:inline-block;
+    margin-top:12px;
+    color:var(--primary);
+    font-size:13px;
+    text-decoration:none;
+    font-weight:600;
+}
+
+.message-erreur{
+    font-size: 0.82rem;
+    color: #b23b2c;
+    background: #ffe7df;
+    border: 1px solid #f2c2b8;
+    padding: 6px 10px;
+    border-radius: 8px;
+}
+
+@media (max-width:480px){
+    .login-card{padding:20px;margin:0 12px}
+    
+}
+
