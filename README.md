@@ -1,58 +1,330 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TicketFlow
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Application web Laravel pour piloter des projets, suivre des tickets et tracer le temps passe par ticket.
 
-## About Laravel
+Ce README est volontairement plus detaille pour expliquer le code et aider a reprendre le projet rapidement.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Sommaire
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Vision du projet
+2. Fonctionnalites
+3. Architecture du code
+4. Flux applicatifs expliques
+5. Schema de donnees
+6. Controllers: role de chaque methode
+7. Scripts JavaScript: quoi, ou, comment
+8. Installation et lancement
+9. Commandes utiles
+10. Points d attention techniques
+11. Idees d evolution
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 1) Vision du projet
 
-## Learning Laravel
+TicketFlow permet a un utilisateur connecte de:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- creer et suivre ses projets
+- creer, modifier et supprimer ses tickets
+- changer les statuts de tickets et projets
+- enregistrer du temps passe sur chaque ticket
+- consulter des stats de profil (tickets ouverts/fermes, projets actifs, temps total)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Le projet est organise en MVC Laravel classique:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+- routes dans `routes/web.php`
+- logique metier dans `app/Http/Controllers`
+- acces donnees via Eloquent dans `app/Models`
+- rendu UI via Blade dans `resources/views`
+- interactions front via scripts natifs dans `public/js`
 
-## Agentic Development
+## 2) Fonctionnalites
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Authentification
+
+- login (`GET /`, `POST /`)
+- inscription (`GET /register`, `POST /register`)
+- logout (`POST /logout`)
+
+### Projets
+
+- liste, creation, edition, suppression
+- mise a jour du statut (`PATCH /projets/{id}/statut`)
+- vue detail projet avec tickets associes
+
+### Tickets
+
+- liste, creation, edition, suppression
+- creation depuis un projet (`/projets/{id}/tickets/create`)
+- mise a jour du statut (`PATCH /tickets/{id}/statut`)
+- creation rapide via modale en `fetch` JSON (`POST /tickets/quick-store`)
+
+### Suivi du temps
+
+- ajout d entree de temps sur un ticket
+- suppression d entree de temps
+
+### Dashboard et profil
+
+- dashboard avec tickets de l utilisateur
+- page profil avec agregations (tickets, projets actifs, temps total)
+
+## 3) Architecture du code
+
+### Couche HTTP
+
+Les routes sont definies dans `routes/web.php`.
+
+- routes publiques pour auth
+- groupe `Route::middleware('auth')` pour toutes les pages metier
+- les requetes sont orientees vers les controllers `AuthController`, `TicketController`, `ProjetController`, `TempsPasseController`
+
+### Couche metier (controllers)
+
+Les controllers font 4 choses principales:
+
+1. validation des entrees utilisateur
+2. verification du perimetre utilisateur (`where('user_id', Auth::id())`)
+3. operations CRUD sur modeles
+4. redirection/retour JSON selon le contexte
+
+### Couche donnees (Eloquent)
+
+Modeles:
+
+- `User`
+- `Projet`
+- `Ticket`
+- `TempsPasse`
+
+Relations:
+
+- `Projet hasMany Ticket`
+- `Ticket belongsTo Projet`
+- `Ticket hasMany TempsPasse`
+- `TempsPasse belongsTo Ticket`
+- `Ticket` et `Projet` appartiennent a `User`
+
+### Couche front
+
+- vues Blade dans `resources/views`
+- scripts front dedies dans `public/js`
+- build assets via Vite (`resources/js/app.js`, `resources/js/bootstrap.js`, `vite.config.js`)
+
+## 4) Flux applicatifs expliques
+
+### Flux A - Connexion utilisateur
+
+1. formulaire login envoie `POST /`
+2. `AuthController@login` valide `username` et `password`
+3. `Auth::attempt` authentifie
+4. session regeneree puis redirection vers `dashboard`
+
+En cas echec: retour sur la page avec message d erreur.
+
+### Flux B - Creation ticket classique (formulaire)
+
+1. utilisateur ouvre la page create ticket
+2. front valide les champs obligatoires via `public/js/script1.js`
+3. backend `TicketController@store` revalide serveur
+4. insertion du ticket avec `user_id` et `projet_id`
+5. redirection vers detail projet ou liste tickets
+
+### Flux C - Creation ticket rapide (modale)
+
+1. ouverture de modale depuis layout principal
+2. validation locale dans `public/js/script-modal.js`
+3. soumission `fetch` en JSON vers `POST /tickets/quick-store`
+4. `TicketController@apiStore` valide et cree ticket
+5. reponse JSON success puis refresh UI
+
+Point important: la route de modale est une route web (pas `api.php`) pour conserver la session auth.
+
+### Flux D - Suivi du temps
+
+1. ajout de temps via `POST /tickets/{ticketId}/temps`
+2. `TempsPasseController@store` valide puis verifie proprietaire ticket
+3. insertion dans `temps_passes`
+4. redirection vers detail ticket
+
+## 5) Schema de donnees
+
+Tables metier principales:
+
+- `projets`
+- `tickets`
+- `temps_passes`
+- `users`
+
+### Table `projets`
+
+Champs principaux:
+
+- `id`
+- `nom`
+- `description` (nullable)
+- `client`
+- `priorite` enum: `basse`, `moyenne`, `haute`
+- `statut` enum: `en-cours`, `planifié`, `terminé`
+- `due`
+- `user_id`
+
+### Table `tickets`
+
+Champs principaux:
+
+- `id`
+- `sujet`
+- `description` (nullable)
+- `client`
+- `priorite` enum: `basse`, `moyenne`, `haute`
+- `statut` enum: `ouvert`, `en cours`, `fermé`
+- `due`
+- `user_id`
+- `projet_id`
+
+### Table `temps_passes`
+
+Champs principaux:
+
+- `id`
+- `ticket_id`
+- `user_id`
+- `date`
+- `duree` (minutes)
+- `commentaire` (nullable)
+
+## 6) Controllers: role de chaque methode
+
+### `AuthController`
+
+- `showLogin`: affiche la vue login
+- `login`: valide + authentifie
+- `showRegister`: affiche la vue register
+- `register`: valide + cree user (password hash)
+- `logout`: deconnecte + invalide session
+
+### `TicketController`
+
+- `dashboard`: tickets user pour page dashboard
+- `index`: liste tickets user
+- `create`: formulaire creation ticket
+- `createForProjet`: creation ticket contextualisee projet
+- `store`: creation ticket via formulaire HTML
+- `apiStore`: creation ticket via JSON `fetch`
+- `show`: detail ticket + temps passes
+- `edit` / `update`: edition ticket
+- `destroy`: suppression ticket
+- `updateStatut`: patch statut ticket
+
+### `ProjetController`
+
+- `index`: liste projets + count tickets
+- `create` / `store`: creation projet
+- `show`: detail projet + tickets + temps
+- `edit` / `update`: edition projet
+- `destroy`: suppression projet
+- `updateStatut`: patch statut projet
+
+### `TempsPasseController`
+
+- `store`: ajoute une entree de temps sur ticket user
+- `destroy`: supprime une entree de temps
+
+## 7) Scripts JavaScript: quoi, ou, comment
+
+### `public/js/script-modal.js`
+
+Script de la modale globale:
+
+- open/close (boutons, clic overlay, touche Escape)
+- validation des champs requis
+- creation payload JSON
+- envoi `fetch` vers `/tickets/quick-store`
+- affichage toast de succes puis reload
+
+### `public/js/script1.js`
+
+Script de validation et soumission du formulaire de creation ticket.
+
+### `public/js/script2.js`
+
+Filtres front sur tableau tickets:
+
+- filtre par statut
+- filtre par priorite
+
+Le filtrage se base sur les attributs `data-statut` et `data-priorite` des lignes HTML.
+
+### `public/js/script3.js`
+
+Validation formulaire creation projet puis soumission du formulaire.
+
+### `public/js/script4.js`
+
+Validation formulaire login (username/password non vides).
+
+## 8) Installation et lancement
+
+### Prerequis
+
+- PHP 8.3+
+- Composer
+- Node.js + npm
+- SQLite (ou autre SGBD configure dans `.env`)
+
+### Installation rapide (recommandee)
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Le script fait:
 
-## Contributing
+1. `composer install`
+2. creation `.env` si absent
+3. `php artisan key:generate`
+4. `php artisan migrate --force`
+5. `npm install`
+6. `npm run build`
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Lancer en developpement
 
-## Code of Conduct
+```bash
+composer run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Lance en parallele:
 
-## Security Vulnerabilities
+- serveur Laravel
+- queue listener
+- pail logs
+- Vite dev server
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Installation manuelle
 
-## License
+```bash
+composer install
+copy .env.example .env
+php artisan key:generate
+type nul > database\\database.sqlite
+php artisan migrate
+npm install
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 9) Commandes utiles
+
+```bash
+# tests
+composer run test
+
+# vider config/cache route/view
+php artisan optimize:clear
+
+# relancer migrations a zero
+php artisan migrate:fresh
+```
+
+
+## Licence
+
+Projet base sur Laravel. Laravel est distribue sous licence MIT.

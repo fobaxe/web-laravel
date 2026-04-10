@@ -1,7 +1,8 @@
-// Validation des champs obligatoires
+// Verifie les champs obligatoires avant l'envoi du ticket.
 function check_form() {
     let nb_errors = 0;
 
+    // Champ client obligatoire.
     const client = document.querySelector('#client');
     const client_error = document.querySelector('#client-error');
     if (client.value === '') {
@@ -11,6 +12,7 @@ function check_form() {
         client_error.classList.add('titanic');
     }
 
+    // Champ sujet obligatoire.
     const subject = document.querySelector('#subject');
     const subject_error = document.querySelector('#subject-error');
     if (subject.value === '') {
@@ -20,6 +22,7 @@ function check_form() {
         subject_error.classList.add('titanic');
     }
 
+    // Date d'echeance obligatoire.
     const due = document.querySelector('#due');
     const due_error = document.querySelector('#due-error');
     if (due.value === '') {
@@ -32,27 +35,29 @@ function check_form() {
     return nb_errors;
 }
 
+// Formulaire de creation de ticket.
 const form = document.querySelector('#create-ticket-form');
 
 form.addEventListener('submit', async function (event) {
-    // On empêche toujours le rechargement de page
+    // Empeche le submit HTML classique pour passer par fetch().
     event.preventDefault();
 
     const errors = check_form();
+    // Si au moins une erreur est presente, on stoppe ici.
     if (errors > 0) return;
 
-    // Récupération des valeurs du formulaire
+    // Recupere les valeurs saisies.
     const subject  = document.querySelector('#subject').value;
     const client   = document.querySelector('#client').value;
     const due      = document.querySelector('#due').value;
     const priority = document.querySelector('#priority').value;
     const status   = document.querySelector('#status').value;
 
-    // Récupération du token CSRF depuis la balise meta de Laravel
+    // Token CSRF necessaire pour les requetes POST Laravel.
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     try {
-        // Appel API avec fetch() vers POST /api/tickets
+        // Appel API vers la route de creation de ticket.
         const response = await fetch('/api/tickets', {
             method: 'POST',
             headers: {
@@ -66,21 +71,22 @@ form.addEventListener('submit', async function (event) {
         const data = await response.json();
 
         if (response.ok && data.success) {
-            // Affichage du toast de succès
+            // Affiche un toast si la creation est reussie.
             const toast = document.querySelector('#success');
             toast.classList.remove('titanic');
             setTimeout(() => toast.classList.add('titanic'), 2000);
 
-            // Réinitialisation du formulaire
+            // Nettoie quelques champs pour un nouvel ajout.
             document.querySelector('#subject').value = '';
             document.querySelector('#client').value  = '';
             document.querySelector('#due').value      = '';
         } else {
-            // Affichage des erreurs de validation retournées par Laravel
+            // Affiche les erreurs remontees par le backend Laravel.
             console.error('Erreurs API :', data.errors ?? data.message);
             alert('Erreur : ' + (data.message ?? 'Impossible de créer le ticket.'));
         }
     } catch (err) {
+        // Gestion des problemes reseau/cote serveur.
         console.error('Erreur réseau :', err);
         alert('Une erreur réseau est survenue.');
     }

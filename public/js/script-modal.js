@@ -1,4 +1,4 @@
-// ── Éléments DOM ──────────────────────────────────────────────
+// Recupere tous les elements de la modale utilises dans le script.
 const overlay   = document.getElementById('modal-overlay');
 const btnOpen   = document.getElementById('btn-open-modal');
 const btnClose  = document.getElementById('btn-close-modal');
@@ -6,30 +6,34 @@ const btnCancel = document.getElementById('btn-cancel-modal');
 const form      = document.getElementById('modal-ticket-form');
 const toast     = document.getElementById('modal-toast');
 
-// ── Ouvrir / fermer la modale ─────────────────────────────────
+// Ouvre la modale et place le curseur dans le premier champ utile.
 function openModal() {
     overlay.classList.add('open');
     document.getElementById('m-subject').focus();
 }
 
+// Ferme la modale puis remet le formulaire a zero.
 function closeModal() {
     overlay.classList.remove('open');
     resetForm();
 }
 
+// Branche les boutons d'ouverture/fermeture.
 btnOpen.addEventListener('click', openModal);
 btnClose.addEventListener('click', closeModal);
 btnCancel.addEventListener('click', closeModal);
 
+// Si on clique en dehors de la fenetre, on ferme la modale.
 overlay.addEventListener('click', function (e) {
     if (e.target === overlay) closeModal();
 });
 
+// Touche Echap = fermeture rapide quand la modale est ouverte.
 document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
 });
 
-// ── Validation ────────────────────────────────────────────────
+// Verifie qu'un champ n'est pas vide et affiche/cache son message d'erreur.
 function validateField(inputId, errorId) {
     const input = document.getElementById(inputId);
     const error = document.getElementById(errorId);
@@ -41,6 +45,7 @@ function validateField(inputId, errorId) {
     return true;
 }
 
+// Valide les champs obligatoires de la modale.
 function validateForm() {
     const ok1 = validateField('m-subject', 'm-subject-error');
     const ok2 = validateField('m-client',  'm-client-error');
@@ -49,22 +54,25 @@ function validateForm() {
     return ok1 && ok2 && ok3 && ok4;
 }
 
+// Nettoie le formulaire et retire les messages visuels.
 function resetForm() {
     form.reset();
     document.querySelectorAll('.field-error').forEach(el => el.classList.remove('visible'));
     toast.classList.remove('visible');
 }
 
-// ── Soumission via fetch() → POST /tickets/quick-store ────────
-// On pointe sur une route WEB (pas API) pour que la session
-// Laravel soit reconnue et que Auth::id() fonctionne
+// Soumet le formulaire en fetch vers la route api Laravel.
+// On utilise une route web (et non api.php) pour conserver la session Auth::id().
 form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
+    // Stoppe l'envoi si la validation locale echoue.
     if (!validateForm()) return;
 
+    // Recupere le token CSRF ajoute par Laravel dans la balise <meta>.
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+    // Construit la charge utile envoyee au serveur.
     const payload = {
         subject:     document.getElementById('m-subject').value.trim(),
         client:      document.getElementById('m-client').value.trim(),
@@ -76,6 +84,7 @@ form.addEventListener('submit', async function (e) {
     };
 
     try {
+        // Envoi HTTP en JSON avec les en-tetes attendus par Laravel.
         const response = await fetch('/tickets/quick-store', {
             method: 'POST',
             headers: {
@@ -90,12 +99,14 @@ form.addEventListener('submit', async function (e) {
         const data = await response.json();
 
         if (response.ok && data.success) {
+            // Affiche une confirmation, puis recharge la page pour voir le nouveau ticket.
             toast.classList.add('visible');
             setTimeout(() => {
                 closeModal();
                 window.location.reload();
             }, 1500);
         } else {
+            // Concatene les erreurs de validation Laravel pour les afficher a l'utilisateur.
             const messages = data.errors
                 ? Object.values(data.errors).flat().join('\n')
                 : (data.message ?? 'Une erreur est survenue.');
@@ -103,6 +114,7 @@ form.addEventListener('submit', async function (e) {
         }
 
     } catch (err) {
+        // Gestion des erreurs reseau (serveur indisponible, coupure, etc.).
         console.error('Erreur réseau :', err);
         alert('Impossible de contacter le serveur.');
     }
